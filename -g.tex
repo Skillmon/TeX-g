@@ -4,6 +4,8 @@
 \long\def\@gobble#1{}
 \long\def\@secondoftwo#1#2{#2}
 
+\unexpanded{\def\minusg@killspace} {}
+
 % naming convention for the fi-macros:
 % \fi@<number of arguments><which one to use>
 % with <number of arguments> being an uppercase letter (number is the position
@@ -67,64 +69,120 @@
     \minusg@tmpb
     \minusg@tmpc
   }%=<<
+\long\def\minusg@ifhead@space#1%
+  {%
+    \long\def\minusg@ifhead@space##1%
+      {%
+        \minusg@ifhead@space@
+          \minusg@stop##1\minusg@stop\minusg@ifhead@space@true
+          \minusg@stop #1\minusg@stop\@secondoftwo
+      }%
+    \long\def\minusg@ifhead@space@##1\minusg@stop#1##2\minusg@stop{}
+    \long\def\minusg@ifhead@space@true
+        \minusg@stop#1\minusg@stop\@secondoftwo##1##2%
+      {##1}%
+  }
+\minusg@ifhead@space{ }
 
-\protected\def\minusg@for#1%>>=
+\long\def\minusg@ifnil#1\minusg@nil#2\minusg@stop{}
+
+\protected\def\minusg@forloop@setup#1#2%>>=
   {%
     \minusg@ifsingle{#1}
       {%
-        \def\minusg@for@revertdef
-          {%
-            \begingroup\lccode`\~=`#1\lowercase{\endgroup\let~}%
-          }%
-        \begingroup\lccode`\~=`#1\lowercase{\endgroup\let\minusg@for@saveddef~}%
-        \def\minusg@for@def{\minusg@def@active#1}%
-        \edef\minusg@for@revertcat{\unexpanded{\catcode`#1=}\the\catcode`#1}%
+        \def\minusg@forloop@revertdef
+          {\begingroup\lccode`\~=`#1\lowercase{\endgroup\let~}}%
+        \begingroup\lccode`\~=`#1\lowercase
+          {\endgroup\let\minusg@forloop@saveddef~}%
+        \def\minusg@forloop@def{\minusg@def@active#1}%
+        \edef\minusg@forloop@revertcat{\unexpanded{\catcode`#1=}\the\catcode`#1}%
         \catcode`#1=13
       }
       {%
-        \def\minusg@for@revertdef{\let#1}%
-        \let\minusg@for@saveddef#1\relax
-        \def\minusg@for@def{\def#1}%
-        \let\minusg@for@revertcat\relax
+        \def\minusg@forloop@revertdef{\let#1}%
+        \let\minusg@forloop@saveddef#1\relax
+        \def\minusg@forloop@def{\def#1}%
+        \let\minusg@forloop@revertcat\relax
       }%
     \minusg@normal
-    \minusg@ifnextchar\bgroup\minusg@for@group\minusg@for@colon
-  }%=<<
-\protected\long\def\minusg@for@group#1%>>=
+    \long\def\minusg@forloop@next##1{#2}%
+    \minusg@ifnextchar\bgroup\minusg@forloop@group\minusg@forloop@colon
+  }% =<<
+\protected\long\def\minusg@forloop@group#1%>>=
   {%
     \minusg@abnormal
-    \minusg@ifnextchar\bgroup{\minusg@for@@group{#1}}{\minusg@for@@eol{#1}}%
+    \minusg@ifnextchar\bgroup
+      {\minusg@forloop@@group{#1}}
+      {\minusg@forloop@@eol{#1}}%
   }%=<<
-\protected\long\def\minusg@for@colon#1:%>>=
+\protected\long\def\minusg@forloop@colon#1:%>>=
   {%
     \minusg@abnormal
-    \minusg@ifnextchar\bgroup{\minusg@for@@group{#1}}{\minusg@for@@eol{#1}}%
+    \minusg@ifnextchar\bgroup
+      {\minusg@forloop@@group{#1}}
+      {\minusg@forloop@@eol{#1}}%
   }%=<<
-\protected\long\def\minusg@for@@group#1#2%>>=
+\protected\long\def\minusg@forloop@@group#1#2%>>=
   {%
-    \def\minusg@for@body{#2}%
-    \minusg@for@loop#1,\minusg@nil
+    \def\minusg@forloop@body{#2}%
+    \minusg@forloop@next{#1}%
   }%=<<
-\protected\long\def\minusg@for@@eol#1%>>=
+\protected\long\def\minusg@forloop@@eol#1%>>=
   {%
-    \catcode`\^^M=13 \minusg@for@@eol@{#1}%
+    \catcode`\^^M=13 \minusg@forloop@@eol@{#1}%
   }%=<<
-\begingroup\lccode`\~=`\^^M\lowercase{\endgroup\def\minusg@for@@eol@#1#2~}%>>=
+\begingroup\lccode`\~=`\^^M\lowercase{\endgroup\def\minusg@forloop@@eol@%>>=
+    #1#2~}%>>=
   {%
     \catcode`\^^M=5
-    \def\minusg@for@body{#2}%
-    \minusg@for@loop#1,\minusg@nil
+    \def\minusg@forloop@body{#2}%
+    \minusg@forloop@next{#1}%
   }%=<<
-\protected\long\def\minusg@for@loop#1,#2\minusg@nil%>>=
+
+\protected\def\minusg@forcsv#1%>>=
+  {%
+    \minusg@forloop@setup{#1}{\minusg@forcsv@loop##1,\minusg@nil}%
+  }%=<<
+\protected\long\def\minusg@forcsv@loop#1,#2\minusg@nil%>>=
   {%
     \minusg@ifempty{#1}
-      {\minusg@for@revertdef\minusg@for@saveddef\minusg@for@revertcat}
+      {\minusg@forloop@revertdef\minusg@forloop@saveddef\minusg@forloop@revertcat}
       {%
-        \minusg@for@def{#1}%
-        \minusg@for@body
-        \minusg@for@loop#2,\minusg@nil
+        \minusg@forloop@def{#1}%
+        \minusg@forloop@body
+        \minusg@forcsv@loop#2,\minusg@nil
       }%
   }%=<<
+\protected\def\minusg@fortoks#1%>>=
+  {%
+    \minusg@forloop@setup{#1}{\minusg@fortoks@loop##1\minusg@nil\minusg@stop}%
+  }%=<<
+\protected\long\def\minusg@fortoks@loop#1\minusg@stop
+  {%
+    \minusg@ifhead@space{#1}%
+      {%
+        \minusg@forloop@def{ }%
+        \minusg@forloop@body
+        \expandafter\minusg@fortoks@loop\minusg@killspace#1\minusg@stop
+      }
+      {\minusg@fortoks@ntype#1\minusg@stop}%
+  }
+\protected\long\def\minusg@fortoks@ntype#1#2\minusg@stop
+  {%
+    \minusg@ifnil#1\minusg@stop
+      \minusg@forloop@revertdef\minusg@forloop@saveddef\minusg@forloop@revertcat
+      \minusg@fortoks@done
+    \minusg@nil\minusg@stop
+    \minusg@forloop@def{#1}%
+    \minusg@forloop@body
+    \minusg@fortoks@loop#2\minusg@stop
+  }
+\protected\long\def\minusg@fortoks@done
+    \minusg@nil\minusg@stop
+    \minusg@forloop@def#1%
+    \minusg@forloop@body
+    \minusg@fortoks@loop#2\minusg@stop
+  {}
 
 \def\minusg@def@active#1%>>=
   {%
@@ -145,7 +203,7 @@
   {%
     \minusg@ifempty{#1}{}
       {%
-        \minusg@for\minusg@pkg#1:%
+        \minusg@forcsv\minusg@pkg#1:%
           {\minusg@normal\expandafter\input\expandafter"\minusg@pkg"}%
       }%
     \minusg@abnormal
@@ -161,7 +219,7 @@
   {%
     \minusg@ifempty{#1}{}
       {%
-        \minusg@for\minusg@pkg#1:%
+        \minusg@forcsv\minusg@pkg#1:%
           {%
             \minusg@normal
             \expandafter\minusg@@usepackage\minusg@pkg||\minusg@@usepackage
@@ -192,7 +250,8 @@
 \minusg@def@active\&#1#2{\expanded{\unexpanded{#1}{#2}}}
 \minusg@let@active?\expandafter
 \minusg@let@active*\minusg@normal
-\let\:\minusg@for
+\let\:\minusg@forcsv
+\let\;\minusg@fortoks
 
 \def~#1%>>=
   {%
