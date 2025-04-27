@@ -20,6 +20,7 @@
     \catcode`\*=12
     \catcode`\<=12
     \catcode`\>=12
+    \catcode`\&=4
     \everyeof{}%
   }%=<<
 \def\minusg@abnormal%>>=
@@ -29,6 +30,7 @@
     \catcode`\?=13
     \catcode`\`=13
     \catcode`\*=13
+    \catcode`\&=13
     \minusg@input@cat
     \minusg@usepackage@cat
   }%=<<
@@ -147,7 +149,7 @@
           {\minusg@normal\expandafter\input\expandafter"\minusg@pkg"}%
       }%
     \minusg@abnormal
-    \everyeof{\csname bye\endcsname}%
+    \everyeof{\csname bye\endcsname\csname stop\endcsname}%
   }%=<<
 \minusg@def@active>%>>=
   {%
@@ -166,7 +168,7 @@
           }%
       }%
     \minusg@abnormal
-    \everyeof{\csname bye\endcsname}%
+    \everyeof{\csname bye\endcsname\csname stop\endcsname}%
   }%=<<
 \long\def\minusg@@usepackage#1|#2|#3\minusg@@usepackage%>>=
   {%
@@ -187,6 +189,7 @@
       {\def#1}%
     {#2}%
   }%=<<
+\minusg@def@active\&#1#2{\expanded{\unexpanded{#1}{#2}}}
 \minusg@let@active?\expandafter
 \minusg@let@active*\minusg@normal
 \let\:\minusg@for
@@ -197,5 +200,9 @@
     \begingroup\lccode`\~=`#1\lowercase{\endgroup\def~}%
   }%=<<
 
-\everyeof{\everyeof{\csname bye\endcsname}}
+\let\T\typeout
+\let\M\message
+\def\C#1{\csname#1\endcsname}
+
+\everyeof{\everyeof{\csname bye\endcsname\csname stop\endcsname}}
 \minusg@abnormal
