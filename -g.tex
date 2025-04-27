@@ -1,3 +1,4 @@
+
 \catcode`\@=11
 \catcode`\~=13
 
@@ -12,6 +13,11 @@
 % in the alphabet, so A is 1, B is 2, etc.), and <which one to use> a lowercase
 % letter (if not present all is gobbled).
 \long\def\fi@Cb\fi#1#2#3{\fi#2}
+
+\ifdefined\ExplFileDate
+  \fi@Cb
+\fi
+\@secondoftwo{}{\input expl3-generic}
 
 \def\minusg@normal%>>=
   {%
