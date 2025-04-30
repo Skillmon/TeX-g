@@ -1,6 +1,9 @@
 
 \catcode`\@=11
 \catcode`\~=13
+\catcode`\:=11
+\catcode`\_=11
+\catcode`\^^@=13
 
 \long\def\@gobble#1{}
 \long\def\@secondoftwo#1#2{#2}
@@ -19,6 +22,17 @@
 \fi
 \@secondoftwo{}{\input expl3-generic}
 
+\def\minusg@catcodes@verb#1;%
+  {%
+    \catcode#1=12
+    \ifnum#1<127
+      \expandafter\minusg@catcodes@verb\the\numexpr#1+1\expandafter;%
+    \fi
+  }
+\protected\edef\minusg@catcodes@verb
+  {%
+    \minusg@catcodes@verb1;%
+  }
 \def\minusg@normal%>>=
   {%
     \catcode`\@=12
@@ -29,6 +43,11 @@
     \catcode`\<=12
     \catcode`\>=12
     \catcode`\&=4
+    \catcode`\ =10
+    \catcode`\:=12
+    \catcode`\_=12
+    \catcode`\$=3
+    \catcode`\^^M=5
   }%=<<
 \def\minusg@abnormal%>>=
   {%
@@ -38,6 +57,11 @@
     \catcode`\`=13
     \catcode`\*=13
     \catcode`\&=13
+    \catcode`\ =13
+    \catcode`\:=11
+    \catcode`\_=11
+    \catcode`\$=13
+    \catcode`\^^M=13
     \minusg@input@cat
     \minusg@usepackage@cat
   }%=<<
@@ -134,12 +158,12 @@
   }%=<<
 \protected\long\def\minusg@forloop@@eol#1%>>=
   {%
-    \catcode`\^^M=13 \minusg@forloop@@eol@{#1}%
+    \begingroup\catcode`\^^M=13 \minusg@forloop@@eol@{#1}%
   }%=<<
 \begingroup\lccode`\~=`\^^M\lowercase{\endgroup\def\minusg@forloop@@eol@%>>=
     #1#2~}%>>=
   {%
-    \catcode`\^^M=5
+    \endgroup
     \def\minusg@forloop@body{#2}%
     \minusg@forloop@next{#1}%
   }%=<<
@@ -195,8 +219,33 @@
   }%=<<
 \def\minusg@let@active#1%>>=
   {%
-    \begingroup\lccode`\~=`#1\lowercase{\endgroup\let~}%
+    \begingroup\lccode`\~=`#1\lowercase{\endgroup\let~=}%
   }%=<<
+\def\minusg@def@active@string#1%>>=
+  {%
+    \begingroup\lccode`\~=`#1\lowercase{\endgroup\edef~}%
+      {%
+        \noexpand\minusg@def@active@string@collector
+        \expandafter\noexpand\csname
+          minusg@@userfunctions@active@string@\detokenize{#1}%
+        \endcsname
+      }%
+    \expandafter\def\csname
+      minusg@@userfunctions@active@string@\detokenize{#1}%
+    \endcsname
+    ##1\relax
+  }%=<<
+\protected\def\minusg@def@active@string@collector
+  {%
+    \begingroup
+    \minusg@catcodes@verb
+    \minusg@def@active@string@collector@
+  }
+\protected\def\minusg@def@active@string@collector@#1#2^^@%
+  {%
+    \endgroup
+    \expandafter#1\detokenize{#2}\relax
+  }
 
 \minusg@def@active<%>>=
   {%
@@ -265,11 +314,20 @@
     \catcode`#1=13
     \begingroup\lccode`\~=`#1\lowercase{\endgroup\def~}%
   }%=<<
+\minusg@def@active\$#1%>>=
+  {%
+    \catcode`#1=13
+    \minusg@def@active@string{#1}%
+  }%=<<
 
 \let\T\typeout
 \let\M\message
 \def\C#1{\csname#1\endcsname}
+\def\U#1{\csname\detokenize{#1}\endcsname}
 \let\D\detokenize
+\minusg@let@active{\ } % <- space on purpose
+
+\minusg@let@active\^^M^^M
 
 \everyeof{\everyeof{\csname bye\endcsname\csname stop\endcsname}}
 \minusg@abnormal
