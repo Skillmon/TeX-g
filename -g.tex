@@ -1,10 +1,10 @@
-
 \catcode`\@=11
 \catcode`\~=13
 \catcode`\:=11
 \catcode`\_=11
 \catcode`\^^@=13
 
+\def\@empty{}
 \long\def\@gobble#1{}
 \long\def\@secondoftwo#1#2{#2}
 
@@ -85,8 +85,8 @@
 \protected\long\def\minusg@ifnextchar#1#2#3%>>=
   {%
     \let\minusg@tmpa#1%
-    \def\minusg@tmpb{#2}%
-    \def\minusg@tmpc{#3}%
+    \edef\minusg@tmpb{\unexpanded{#2}}%
+    \edef\minusg@tmpc{\unexpanded{#3}}%
     \futurelet\minusg@tmpd\minusg@ifnextchar@
   }%=<<
 \protected\def\minusg@ifnextchar@%>>=
@@ -115,7 +115,20 @@
 
 \long\def\minusg@ifnil#1\minusg@nil#2\minusg@stop{}
 
-\protected\def\minusg@forloop@setup#1#2%>>=
+\protected\def\minusg@forloop@setup#1%>>=
+  {%
+    \long\def\minusg@forloop@next##1{#1}%
+    \minusg@ifnextchar\bgroup
+      {%
+        \let\minusg@forloop@revertdef\@empty
+        \let\minusg@forloop@saveddef\@empty
+        \let\minusg@forloop@def\@gobble
+        \let\minusg@forloop@revertcat\@empty
+        \minusg@forloop@group
+      }%
+      \minusg@forloop@setup@
+  }% =<<
+\protected\def\minusg@forloop@setup@#1%
   {%
     \minusg@ifsingle{#1}
       {%
@@ -133,20 +146,16 @@
         \def\minusg@forloop@def{\def#1}%
         \let\minusg@forloop@revertcat\relax
       }%
-    \minusg@normal
-    \long\def\minusg@forloop@next##1{#2}%
     \minusg@ifnextchar\bgroup\minusg@forloop@group\minusg@forloop@colon
-  }% =<<
+  }
 \protected\long\def\minusg@forloop@group#1%>>=
   {%
-    \minusg@abnormal
     \minusg@ifnextchar\bgroup
       {\minusg@forloop@@group{#1}}
       {\minusg@forloop@@eol{#1}}%
   }%=<<
 \protected\long\def\minusg@forloop@colon#1:%>>=
   {%
-    \minusg@abnormal
     \minusg@ifnextchar\bgroup
       {\minusg@forloop@@group{#1}}
       {\minusg@forloop@@eol{#1}}%
@@ -168,9 +177,9 @@
     \minusg@forloop@next{#1}%
   }%=<<
 
-\protected\def\minusg@forcsv#1%>>=
+\protected\def\minusg@forcsv%>>=
   {%
-    \minusg@forloop@setup{#1}{\minusg@forcsv@loop##1,\minusg@nil}%
+    \minusg@forloop@setup{\minusg@forcsv@loop##1,\minusg@nil}%
   }%=<<
 \protected\long\def\minusg@forcsv@loop#1,#2\minusg@nil%>>=
   {%
@@ -182,9 +191,9 @@
         \minusg@forcsv@loop#2,\minusg@nil
       }%
   }%=<<
-\protected\def\minusg@fortoks#1%>>=
+\protected\def\minusg@fortoks%>>=
   {%
-    \minusg@forloop@setup{#1}{\minusg@fortoks@loop##1\minusg@nil\minusg@stop}%
+    \minusg@forloop@setup{\minusg@fortoks@loop##1\minusg@nil\minusg@stop}%
   }%=<<
 \protected\long\def\minusg@fortoks@loop#1\minusg@stop
   {%
@@ -312,7 +321,7 @@
 \def~#1%>>=
   {%
     \catcode`#1=13
-    \begingroup\lccode`\~=`#1\lowercase{\endgroup\def~}%
+    \begingroup\lccode`\~=`#1\lowercase{\endgroup\def~}##1%
   }%=<<
 \minusg@def@active\$#1%>>=
   {%
