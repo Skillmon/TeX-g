@@ -137,7 +137,8 @@
         \begingroup\lccode`\~=`#1\lowercase
           {\endgroup\let\minusg@forloop@saveddef~}%
         \def\minusg@forloop@def{\minusg@def@active#1}%
-        \edef\minusg@forloop@revertcat{\unexpanded{\catcode`#1=}\the\catcode`#1}%
+        \edef\minusg@forloop@revertcat
+          {\unexpanded{\catcode`#1=}\the\catcode`#1\relax}%
         \catcode`#1=13
       }
       {%
