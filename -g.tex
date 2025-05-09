@@ -308,10 +308,10 @@
     \minusg@ifsingle{#1}
       {%
         \catcode`#1=13
-        \begingroup\lccode`\~=`#1\lowercase{\endgroup\def~}%
+        \begingroup\lccode`\~=`#1\lowercase{\endgroup\edef~}%
       }%
-      {\def#1}%
-    {#2}%
+      {\edef#1}%
+    {\unexpanded{#2}}%
   }%=<<
 \minusg@def@active\&#1#2{\expanded{\unexpanded{#1}{#2}}}
 \minusg@let@active?\expandafter
